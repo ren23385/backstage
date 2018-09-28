@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="stylesheet" href="resources/css/bootstrap.min.css" />
+<script type="text/javascript" src="resources/js/jquery.min.js" ></script>
+<script type="text/javascript" src="resources/js/vue.min.js"></script>
+<script type="text/javascript" src="resources/js/axios.min.js"></script>
+<script type="text/javascript" src="resources/js/bootstrap.min.js" ></script>
+<script type="text/javascript" src="resources/js/bootstrap-datepicker.min.js" ></script>
+<script type="text/javascript" src="resources/js/bootstrap-datepicker.zh-CN.min.js" ></script>
+<title>Insert title here</title>
+
+<style type="text/css">
+.custom-file-label::after {
+	content: "请选择文件";
+}
+.col-2{
+	padding: 0px;
+	width: 100px;
+	margin: 0px;
+	margin-left: 20px;
+}
+.col-6{
+	padding: 0px;
+	margin: 0px;
+	margin-left: -20px;
+}
+</style>
+</head>
+<body>
+	<div class="col-sm-12"
+		style="background-color: rgba(0, 0, 255, .1); padding-left: 20px;">
+		<div class="col-md-12">
+			<form action="saveBook" method="post" enctype="multipart/form-data"
+				id="app" v-on:submit.prevent="onSubmit" >
+				<!-- name -->
+				<div class="form-group row" style="margin-top: 10px;">
+					<div class="col-2">
+						<label class="col-form-label" for="name">书籍名称</label>
+					</div>
+					<div class="col-6">
+						<!-- th:class="${#fields.hasErrors('name')}?'form-control is-invalid':'form-control'" -->
+						<input type="text" class="form-control" id="name" name="bookName" />
+						<div class="invalid-feedback"></div>
+					</div>
+				</div>
+				<!-- totalType -->
+				<div class="form-group row">
+					<label class="col-2 col-form-label" for="total_id">书籍范围</label>
+					<div class="col-6">
+						<select class="form-control" id="total_id" onchange="changeType()">
+							<option v-for="type in types" v-bind:value="type.id"
+								class="form-control" v-bind:key="type.id">{{type.bookType}}</option>
+						</select>
+						<div class="invalid-feedback"></div>
+					</div>
+				</div>
+				
+				<!-- singleType -->
+				<div class="form-group row">
+					<label class="col-2 col-form-label" for="single_id">书籍类型</label>
+					<div class="col-6">
+						<select class="form-control" id="single_id">	
+							<option  
+							v-for="singleType in singleTypes" v-bind:value="singleType.id"
+								class="form-control" v-bind:key="singleType.id">{{singleType.bookType}}
+							</option> 
+						</select>
+						<div class="invalid-feedback"></div>
+					</div>
+				</div>
+
+				<!-- descri -->
+				<div class="form-group row">
+					<label class="col-2 col-form-label" for="descri">相关描述</label>
+					<div class="col-6">
+						<textarea id="descri" class="form-control" name="descri"></textarea>
+						<div class="invalid-feedback"></div>
+					</div>
+				</div>
+
+				<!-- factor -->
+				<div class="form-group row">
+					<label class="col-2 col-form-label" for="author">书籍作者</label>
+					<div class="col-6">
+						<!-- th:class="${#fields.hasErrors('name')}?'form-control is-invalid':'form-control'" -->
+						<input id="author" class="form-control" name="author" />
+						<div class="invalid-feedback"></div>
+					</div>
+				</div>
+
+				<!-- date -->
+				<div class="form-group row">
+					<label class="col-2 col-form-label" for="pubdate">出版日期</label>
+					<div class="col-6">
+						<input id="pubdate" class="form-control" name="publishDate"
+							autocomplete="off" />
+						<div class="invalid-feedback"></div>
+					</div>
+				</div>
+				
+				<!-- date -->
+				<div class="form-group row">
+					<label class="col-2 col-form-label" for="bookConcern">出版社</label>
+					<div class="col-6">
+						<input id="bookConcern" class="form-control" name="bookConcern"
+							autocomplete="off" />
+						<div class="invalid-feedback"></div>
+					</div>
+				</div>
+
+				<!-- price -->
+				<div class="form-group row">
+					<label class="col-2 col-form-label" for="price">书籍价格</label>
+					<div class="col-6">
+						<input id="price" class="form-control" name="oldPrice" />
+						<div class="invalid-feedback"></div>
+					</div>
+				</div>
+
+				<!-- photo -->
+				<div class="form-group row">
+					<label for="file" class="col-2 col-form-label">书籍图片</label>
+					<div class="col-6">
+						<div class="custom-file">
+							<input type="file" class="custom-file-input" id="file"
+								name="file" /> <label class="custom-file-label form-control"
+								for="customFile">选择文件</label>
+						</div>
+						<div class="col-2"></div>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<div class="col-6 offset-md-2" style="margin-left: 300px;">
+						<button type="submit" class="btn btn-primary">添加</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+	
+<script type="text/javascript">
+	$(function() {
+		//日期控件
+		$('#pubdate').datepicker({
+			format : 'yyyy-mm-dd',//日期格式
+			language : 'zh-CN',//提示中文界面
+			autoclose : true
+		//自动关闭
+		});
+	});
+</script>
+
+<script type="text/javascript">
+		var app = new Vue({
+			el:"#app",
+			data:{
+				singleTypes:{},
+				types:{
+				}
+
+			},
+			methods:{
+				changeType:function(){
+					var a = $("#total_id  option:selected").val();
+					app.singleTypes = app.types[a].singleTypes;
+				},
+				
+				getTypes:function(){
+					axios.post("allTypes").then(function(response){
+						if(response.data){
+							console.log(response.data);
+							app.types = response.data;	
+							app.singleTypes = response.data[0].singleTypes;			
+						}
+					}).catch(function(error){
+
+					});
+
+				},
+				onSubmit:function(){
+					var formData = new FormData();
+					formData.append("bookName",$("#name").val());
+					formData.append("bookToallType_id",$("#total_id  option:selected").val());
+					formData.append("bookSingleType_id",$("#single_id  option:selected").val());
+					formData.append("author",$("#author").val());
+					formData.append("descri",$("#descri").val());
+					formData.append("oldPrice",$("#price").val());
+					formData.append("publishDate",$("#pubdate").val());
+					formData.append("bookConcern",$("#bookConcern").val());
+					formData.append("file",$("#file")[0].files[0]);
+					axios.post("saveBook",formData,{
+
+						onLoadProgress:function(progressEvent){
+
+							var percentCompleted = Math.round( (progressEvent.loaded * 100) /
+								progressEvent.total );
+								$("#loadProgress").value=percentCompleted;																
+
+						}
+						}).then(function(response){
+
+						if(response.data){
+							if(response.data.success){
+								alert(response.data.msg);
+								window.location.href = response.data.url;
+								
+							}else{
+								if(response.data.errors){
+									/* <![CDATA[*/
+									for (var i = 0; i< response.data.errors.length;i++) {
+
+									$('[name="'+response.data.errors[i].field+'"]').addClass("is-invalid").next(".invalid-feedback")
+									.html(response.data.errors[i].defaultMessage);
+									
+									}
+									
+									/* ]]> */
+
+								}
+								alert(response.data.msg);
+							}
+							
+						}
+						
+					}).catch(function(error){
+						
+					});
+											
+				},
+			}
+		});
+
+		app.getTypes();
+
+		function changeType() {
+			app.changeType();
+		}
+</script>
+</body>
+</html>

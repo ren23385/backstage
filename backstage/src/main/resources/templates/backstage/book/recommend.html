@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Insert title here</title>
+<link rel="stylesheet" href="resources/css/bootstrap.min.css" />
+<script type="text/javascript" src="resources/js/jquery.min.js"></script>
+<script type="text/javascript" src="resources/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="resources/js/axios.min.js"></script>
+<script type="text/javascript" src="resources/js/vue.min.js"></script>
+<style type="text/css">
+.td{
+	padding: 0px;
+}
+</style>
+</head>
+<body>
+<div class="container-fluid card" style="padding: 0px;" id="app">
+	<div class="card-header">
+		<a class="btn btn-primary mb-2" type="button" style="float: left;margin-right: 15px;" href="add">添加</a>
+		<form class="form-inline" action="/backstage/bookList" id="bookListSearchFrm"
+			v-on:submit.prevent="onSubmit" style="float: left;">
+			<!-- 默认看第一页 ,简化点击分页链接时候带表单参数问题-->
+			<input name="pageNo" type="hidden" value="1" /> 
+			<label class="sr-only" for="inlineFormInputName2">名字 </label> 
+			<input type="text" class="form-control mb-2 mr-sm-2"
+				id="inlineFormInputName2" placeholder="书名" name="name" v-model="name"
+				v-bind:value="name" /> 
+			<label class="sr-only" for="inlineFormInputName2">类型 </label> 
+					
+			<select name="tid"
+					class="form-control mb-2 mr-sm-2" id="tid_sel">
+				<option value="-1">--请选择--</option>
+				<option v-for="type in types" v-bind:key="type.id"
+				v-bind:value="type.id">{{type.bookType}}</option>
+			</select>
+			<button type="submit" class="btn btn-primary mb-2">搜索</button>
+		</form>
+		<a class="btn btn-primary mb-2" href="today" style="float: right;">刷新</a>
+	</div>
+	<div class="card-body" style="padding: 0px;">
+		<table class="table table-bordered" style="padding: 0px;margin: 0px;">
+			<thead class="col-md-12">
+				<tr class="row" style="margin: 0px;padding: 0px;">
+					<th class="col-md-1 col-1 text-center">序号</th>
+					<th class="col-md-1 col-1 text-center">书籍名称</th>
+					<th class="col-md-1 col-1 text-center">书籍作者</th>
+					<th class="col-md-2 col-1 text-center">书籍描述</th>
+					<th class="col-md-1 col-1 text-center">书籍价格</th>
+					<th class="col-md-1 col-1 text-center">出版社</th>
+					<th class="col-md-1 col-1 text-center">出版日期</th>
+					<th class="col-md-3 col-1 text-center">书籍图片</th>
+					<th class="col-md-1 col-1 text-center">相关操作</th>
+				</tr>
+			</thead>
+			<tbody>
+				<template v-if="!pageInfo.list || !pageInfo.list.length">
+					<tr>
+						<td colspan="9">无数据</td>
+					</tr>
+				</template>
+
+				<template v-else="">
+					<tr class="row" v-for="book in pageInfo.list" style="margin: 0px;padding: 0px;">
+						<td class="col-md-1 col-1 text-center" id="bookId">{{book.id}}</td>
+						<td class="col-md-1 col-1 text-center">{{book.bookName}}</td>
+						<td class="col-md-1 col-1 text-center">{{book.author}}</td>
+						<td class="col-md-2 col-1 text-center">{{book.descri}}</td>
+						<td class="col-md-1 col-1 text-center">{{book.oldPrice}}</td>
+						<td class="col-md-1 col-1 text-center">{{book.bookConcern}}</td>
+						<td class="col-md-1 col-1 text-center">{{book.publishDate}}</td>
+						<td class="col-md-3 col-1 text-center"><img
+						v-bind:src="'/upload/'+book.photo" style="max-height: 100px;"
+						onerror="this.src='/resources/img/common/null.jpg'" /></td>
+						<td class="col-md-1 col-1 text-center">
+						<a v-bind:href="'cancleById?id='+book.id" id="delBook" class="btn btn-primary"
+						onclick="delConfirm(event)" style="padding: 0px;">取消推荐
+							</a>
+						</td>
+					</tr>
+				</template>
+			</tbody>
+		</table>
+	</div>
+	<div class="card-footer text-muted">
+		<nav aria-label="...">
+			<ul class="pagination">
+
+			<!-- 前一页 -->
+			<li class="disabled" v-if="pageInfo.isFirstPage"><a
+				href="javascript:void(0)" class="page-link">&laquo;</a></li>
+			<li class="page-item">
+				<a	v-bind:href="'today?pageNo='+pageInfo.prePage"
+				class="page-link" v-if="!pageInfo.isFirstPage">
+				&laquo;
+				</a>
+			</li>
+
+			<!-- 最多显示8个链接 -->
+			<li class="page-item" v-for="pi in pageInfo.navigatepageNums"
+				v-bind:class="pi==pageInfo.pageNum?'page-item active':'page-item'">
+				<a v-bind:href="'today?pageNo='+pi"
+				class="page-link">{{pi}}
+				</a>
+			</li>
+						
+			<!-- javascript:void(0)就是取消超级链接的默认行为方式-->
+			<li class="disabled" v-if="pageInfo.isLastPage">
+				<a href="javascript:void(0)" class="page-link">&raquo;</a></li>
+			<li class="page-item" v-if="!pageInfo.isLastPage">
+				<a v-bind:href="'today?pageNo='+pageInfo.nextPage"
+					class="page-link">&raquo;
+				</a>
+			</li>
+			</ul>
+		</nav>
+	</div>
+</div>
+
+
+<!-- 删除确认框 -->
+	<!-- Modal -->
+	<div class="modal fade" id="delDlg" tabindex="-1" role="dialog">
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content">
+
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLongTitle">取消确认</h5>
+
+				</div>
+				<div class="modal-body">你确认要取消推荐?</div>
+
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary"
+						data-dismiss="modal">取消</button>
+					<button type="button" class="btn btn-primary btn_ok">确定</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<script type="text/javascript">
+		$(function() {
+			/* var theme = [[@{#theme.code('themebase')}]];
+			$("#themeSel").val(theme);
+ */
+			$("#delDlg").modal({
+				backdrop : 'static',//否则你点击对话框外的部分就消失
+				show : false
+			//默认是显示的
+			});
+
+		});
+	</script>
+
+	<script type="text/javascript">
+
+
+		function delConfirm(event) {
+			//取消超级链接的默认行为
+			event.preventDefault();
+			
+			var url = event.target.href;
+			$('#delDlg').modal('show');
+			//给确认框绑定一次性事件
+			$("#delDlg button.btn_ok ").one("click", function() {
+				window.location.href = url;
+			});
+		}
+	</script>
+
+	<script type="text/javascript">
+		var app = new Vue({
+			el:"#app",
+			data:{
+				//设置默认值
+				pageInfo:{
+					list:[]
+					},
+				name:"",
+				tid:-1,
+				types:{}
+			},
+			methods:{
+				getData:function(){
+					axios.post("showList?"+ $("#bookListSearchFrm").serialize()).then(function(response){							
+						
+						if (response.data) {
+							
+							 app.pageInfo = response.data.pageInfo; //页面才更新
+							 app.types = response.data.types;
+							 app.name = response.data.name;
+							 $("#tid_sel").val(response.data.tid);
+							 pageNum=response.data.pageInfo.pageNum;
+						 }
+					}).catch(function(error){
+
+					});
+				},
+				onSubmit:function(){
+					
+					app.getData();
+				}
+			}
+
+		});
+	app.getData();
+
+	</script>
+</body>
+</html>

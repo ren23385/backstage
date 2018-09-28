@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<link href="resources/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resources/js/jquery.min.js"></script>
+<script type="text/javascript" src="resources/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="resources/js/vue.min.js"></script>
+<script type="text/javascript" src="resources/js/axios.min.js"></script>
+
+<title>Insert title here</title>
+</head>
+<body>
+
+<div class="container-fluid card" id="app" style="padding: 0px;margin: 0px;width: 100%">
+	<div class="card-header">
+		<form action="backstage/back" method="post" id="orderSearch" class="form-inline" style="float: left;"
+		v-on:submit.prevent="onSubmit">
+			订单编号：<input type="text" name="id"  class="form-control col-4"/>
+			<button type="submit" class="btn">搜索</button>
+		</form>
+		<a href="backOrder" class="btn btn-primary mb-2" style="float: right;">刷新</a>
+	</div>
+	<div class="card-body" style="margin: 5px;padding: 0px;">
+		<table class="table table-bordered">
+			<thead class="col-md-12" style="padding-left: 0px; margin-bottom: 0px;">
+				<tr class="row" style="margin: 0px;">
+					<th class="col-md-1 col-1 text-center">订单编号</th>
+					<th class="col-md-2 col-1 text-center">商品总价</th>
+					<th class="col-md-2 col-1 text-center">用户ID</th>
+					<th class="col-md-2 col-1 text-center">订单状态</th>
+					<th class="col-md-2 col-1 text-center">快递编号</th>
+					<th class="col-md-3 col-1 text-center">订单操作</th>
+				</tr>
+			</thead>
+			<tbody style="height: 900px;">
+				<template v-if="!pageInfo.list || !pageInfo.list.length">
+				<tr>
+					<td colspan="9">无数据</td>
+				</tr>
+				</template>
+
+				<template v-else="">
+					<tr class="row" v-for="order in pageInfo.list" style="padding-left: 0px; margin: 0px;">
+						<td class="col-md-1 col-1 text-center">{{order.id}}</td>
+						<td class="col-md-2 col-1 text-center">{{order.totallPrice}}</td>
+						<td class="col-md-2 col-1 text-center">{{order.user_id}}</td>
+						<td class="col-md-2 col-1 text-center">{{order.orderStatus}}</td>
+						<td class="col-md-2 col-1 text-center">快递编号</td>
+						<td class="col-md-3 col-1 text-center">
+							操作
+						</td>
+					</tr>
+				</template>
+			</tbody>
+		</table>
+	</div>
+
+	<div class="card-footer text-muted">
+		<nav aria-label="...">
+			<ul class="pagination">
+
+				<!-- 前一页 -->
+				<li class="disabled" v-if="pageInfo.isFirstPage"><a
+					href="javascript:void(0)" class="page-link"
+					v-on:click.prevent="onPageClick">&laquo;</a></li>
+
+				<li class="page-item"><a
+					v-bind:href="'backstage/shipped?pageNo='+pageInfo.prePage" class="page-link"
+					v-if="!pageInfo.isFirstPage" v-on:click.prevent="onPageClick">
+						&laquo;</a></li>
+
+
+				<!-- 最多显示8个链接 -->
+				<li class="page-item" v-for="pi in pageInfo.navigatepageNums"
+					v-bind:class="pi==pageInfo.pageNum?'page-item active':'page-item'">
+					<a v-bind:href="'backstage/shipped?pageNo='+pi" class="page-link"
+					v-on:click.prevent="onPageClick">{{pi}}</a>
+				</li>
+
+				<!-- javascript:void(0)就是取消超级链接的默认行为方式-->
+				<li class="disabled" v-if="pageInfo.isLastPage"><a
+					href="javascript:void(0)" class="page-link"
+					v-on:click.prevent="onPageClick">&raquo;</a></li>
+				<li class="page-item" v-if="!pageInfo.isLastPage"><a
+					v-bind:href="'/backstage/shipped?pageNo='+pageInfo.nextPage"
+					v-on:click.prevent="onPageClick" class="page-link">&raquo;</a></li>
+			</ul>
+		</nav>
+	</div>
+</div>
+
+
+
+
+
+
+
+	<script type="text/javascript">
+	var app = new Vue({
+		el:"#app",
+		data:{
+			//设置默认值
+			pageInfo:{
+				list:[]
+				},
+			order:""
+		},
+		created(){
+			this.getData()
+		},
+		methods:{
+
+			getInfo:function(){		    
+			    let obj = {
+			       getRows:axios.post("backstage/back?"+$("#orderSearch").serialize()),
+			       
+			    }
+		    
+		   		return obj
+			},	
+			getData:function(){
+				
+				let _this = this;
+				
+				axios.all([ _this.getInfo().getRows]).then(axios.spread(function (rows) {
+
+					
+					_this.pageInfo = rows.data.pageInfo;
+					console.log(_this.pageInfo);
+						
+
+			 	})).catch(function(error){
+
+				});
+			},
+			onSubmit:function(){
+				
+				app.getData();
+			}
+		}
+
+	});
+	</script>
+</body>
+</html>
